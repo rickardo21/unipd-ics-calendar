@@ -296,7 +296,9 @@ async function main() {
   const codes = new Set(lessons.map((l) => l.courseCode));
   const missing = EXPECTED_CODES.filter((c) => !codes.has(c));
   if (missing.length) {
-    fail(`insegnamenti attesi non trovati: ${missing.join(", ")}`);
+    writeFileSync("pagina-debug.html", html);
+    const found = [...codes].join(", ") || "nessuno";
+    fail(`insegnamenti attesi non trovati: ${missing.join(", ")}. Codici trovati: ${found}. Lezioni estratte: ${lessons.length}`);
   }
   if (lessons.length === 0) fail("nessun evento estratto");
 
