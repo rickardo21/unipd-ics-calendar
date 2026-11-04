@@ -240,7 +240,13 @@ function timetableUrl(): string {
 
 async function loadSource(src: string): Promise<string> {
   if (!src.startsWith("http")) return readFileSync(src, "utf8");
-  const res = await fetch(src, { headers: { "User-Agent": "calendario-unipd/1.0" } });
+  const res = await fetch(src, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+      "Accept": "text/html,application/xhtml+xml",
+      "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
+    },
+  });
   if (!res.ok) throw new Error(`HTTP ${res.status} dal sito`);
   return await res.text();
 }
@@ -264,6 +270,8 @@ async function main() {
   }
 
   if (!html.includes("data-codice")) {
+    // Salvo la pagina ricevuta, così si può capire cosa ha restituito il sito.
+    writeFileSync("pagina-debug.html", html);
     fail("la pagina non contiene più la tabella degli orari: il sito può essere cambiato");
   }
 
