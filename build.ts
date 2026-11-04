@@ -229,6 +229,7 @@ function timetableUrl(): string {
     anno: "2026",
     scuola: "ScuoladiIngegneria",
     corso: "IN2917",
+    txtcurr: "1 - ENERGETICO",
     date: today,
     _lang: "en",
     week_grid_type: "-1",
