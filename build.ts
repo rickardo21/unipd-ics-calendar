@@ -260,12 +260,25 @@ async function loadSource(src: string): Promise<string> {
   if (!src.startsWith("http")) return readFileSync(src, "utf8");
   const browser = await chromium.launch();
   try {
-    const page = await browser.newPage({ locale: "it-IT" });
-    await page.goto(src, { waitUntil: "networkidle", timeout: 90_000 });
-    // Aspetto che compaiano le righe dei corsi; se non compaiono, restituisco comunque la pagina
-    // e sarà il controllo successivo a fermare lo script.
-    await page.waitForSelector("[data-codice]", { timeout: 60_000 }).catch(() => {});
-    return await page.content();
+    let html = "";
+    // La pagina a volte si popola a tratti: aspetto che compaiano tutti i corsi attesi, con più tentativi.
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const page = await browser.newPage({ locale: "it-IT" });
+      await page.goto(src, { waitUntil: "networkidle", timeout: 90_000 });
+      const allLoaded = await page
+        .waitForFunction(
+          (codes: string[]) => codes.every((c) => document.querySelector(`[data-codice="${c}"]`) !== null),
+          EXPECTED_CODES,
+          { timeout: 60_000 },
+        )
+        .then(() => true)
+        .catch(() => false);
+      html = await page.content();
+      await page.close();
+      if (allLoaded) break;
+      console.error(`Tentativo ${attempt}: non tutti i corsi sono comparsi${attempt < 3 ? ", riprovo" : ""}`);
+    }
+    return html;
   } finally {
     await browser.close();
   }
