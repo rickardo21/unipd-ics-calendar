@@ -1,0 +1,8 @@
+{
+  "name": "unipd-ics-calendar",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "playwright": "1.55.0"
+  }
+}

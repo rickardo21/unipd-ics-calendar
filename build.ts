@@ -2,11 +2,13 @@
 //  - un file .ics per ogni insegnamento
 //  - un file .ics completo con tutti gli insegnamenti
 //
-// Uso:  node build.ts <pagina.html> <cartella_output>
-// Richiede Node 22.18+ (supporto nativo a TypeScript). Non ci sono dipendenze.
+// Uso:  node build.ts [pagina.html | URL] <cartella_output>
+// Richiede Node 22.18+ (supporto nativo a TypeScript) e Playwright per caricare la pagina
+// in un browser vero, perché la tabella degli orari viene costruita via JavaScript.
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { chromium } from "playwright";
 
 // ---------- tipi ----------
 
@@ -250,17 +252,20 @@ function timetableUrl(): string {
   return `${BASE_URL}?${params.toString()}`;
 }
 
+// Carica la pagina in un Chromium headless, così il JavaScript costruisce la tabella come nel browser.
 async function loadSource(src: string): Promise<string> {
   if (!src.startsWith("http")) return readFileSync(src, "utf8");
-  const res = await fetch(src, {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
-      "Accept": "text/html,application/xhtml+xml",
-      "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
-    },
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status} dal sito`);
-  return await res.text();
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({ locale: "it-IT" });
+    await page.goto(src, { waitUntil: "networkidle", timeout: 90_000 });
+    // Aspetto che compaiano le righe dei corsi; se non compaiono, restituisco comunque la pagina
+    // e sarà il controllo successivo a fermare lo script.
+    await page.waitForSelector("[data-codice]", { timeout: 60_000 }).catch(() => {});
+    return await page.content();
+  } finally {
+    await browser.close();
+  }
 }
 
 function fail(msg: string): never {

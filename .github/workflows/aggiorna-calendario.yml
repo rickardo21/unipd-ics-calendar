@@ -21,6 +21,11 @@ jobs:
         with:
           node-version: "22.23"
 
+      - name: Installa Playwright e Chromium
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+
       # Se la pagina non è leggibile o gli eventi crollano, lo script termina con errore.
       # In quel caso il job fallisce e GitHub ti manda una mail. I file non vengono toccati.
       - name: Scarica orario e genera .ics
