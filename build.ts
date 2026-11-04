@@ -223,17 +223,28 @@ const BASE_URL = "https://agendastudentiunipd.easystaff.it/index.php";
 
 function timetableUrl(): string {
   const today = new Date().toISOString().slice(0, 10);
+  // Stessi parametri di una richiesta fatta dal browser (il modulo viene inviato via JavaScript).
   const params = new URLSearchParams({
     view: "easycourse",
+    "form-type": "corso",
     include: "corso",
+    "txtcurr": "1 - ENERGETICO",
     anno: "2026",
     scuola: "ScuoladiIngegneria",
     corso: "IN2917",
-    txtcurr: "1 - ENERGETICO",
     date: today,
+    periodo_didattico: "",
     _lang: "en",
+    list: "",
     week_grid_type: "-1",
+    ar_codes_: "",
+    ar_select_: "",
+    col_cells: "0",
+    empty_box: "0",
+    only_grid: "0",
+    highlighted_date: "0",
     all_events: "0",
+    faculty_group: "0",
   });
   params.append("anno2[]", "001PD|1");
   return `${BASE_URL}?${params.toString()}`;
