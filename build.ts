@@ -99,13 +99,16 @@ function parseRows(html: string): Lesson[] {
     const segment = html.slice(index, end);
 
     const courseName = parseCourseName(segment);
-    const datesBlock = segment.match(/id="date_eventi"[\s\S]*?(?=<div class="calendar-table-col")/);
-    if (!courseName || !datesBlock) continue;
+    // Il blocco delle date va dall'id "date_eventi" fino al primo <script> successivo.
+    const datesStart = segment.indexOf('id="date_eventi"');
+    if (!courseName || datesStart < 0) continue;
+    let block = segment.slice(datesStart);
+    const scriptAt = block.indexOf("<script");
+    if (scriptAt >= 0) block = block.slice(0, scriptAt);
 
     const teachers = parseTeachers(segment);
 
     // Ogni voce inizia con il nome del giorno: divido la lista su quelle posizioni.
-    const block = datesBlock[0];
     const startRe = /(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+\d{1,2}\s+[A-Za-z]+\s+\d{4}\s+\d{2}:\d{2}/g;
     const dayStarts = [...block.matchAll(startRe)].map((m) => m.index ?? 0);
     const entries = dayStarts.map((s, k) =>
